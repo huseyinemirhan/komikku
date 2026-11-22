@@ -19,6 +19,9 @@ import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.dpToPx
+// KMK -->
+import eu.kanade.tachiyomi.util.upscale.UpscaleManager
+// KMK <--
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.collectLatest
@@ -84,6 +87,13 @@ class WebtoonPageHolder(
      */
     private var loadJob: Job? = null
 
+    // KMK -->
+    /**
+     * Re-renders the page when an upscaled version of it has just been produced.
+     */
+    private var upscaleJob: Job? = null
+    // KMK <--
+
     init {
         refreshLayoutParams()
 
@@ -99,6 +109,15 @@ class WebtoonPageHolder(
         this.page = page
         loadJob?.cancel()
         loadJob = scope.launch { loadPageAndProcessStatus() }
+        // KMK -->
+        upscaleJob?.cancel()
+        upscaleJob = scope.launch {
+            UpscaleManager.completed.collect { key ->
+                val current = this@WebtoonPageHolder.page ?: return@collect
+                if (key == UpscaleManager.keyOf(current) && current.status == Page.State.Ready) setImage()
+            }
+        }
+        // KMK <--
         refreshLayoutParams()
     }
 
@@ -120,6 +139,10 @@ class WebtoonPageHolder(
     override fun recycle() {
         loadJob?.cancel()
         loadJob = null
+        // KMK -->
+        upscaleJob?.cancel()
+        upscaleJob = null
+        // KMK <--
 
         removeErrorLayout()
         frame.recycle()
@@ -191,7 +214,14 @@ class WebtoonPageHolder(
     private suspend fun setImage() {
         progressIndicator.setProgress(0)
 
-        val streamFn = page?.stream ?: return
+        // KMK -->
+        // Queue AI upscaling for this page and the next ones; show the upscaled file if it exists already.
+        val currentPage = page ?: return
+        val streamFn = withIOContext {
+            UpscaleManager.onPageReady(currentPage)
+            UpscaleManager.cachedStream(currentPage) ?: currentPage.stream
+        } ?: return
+        // KMK <--
 
         try {
             val (source, isAnimated) = withIOContext {

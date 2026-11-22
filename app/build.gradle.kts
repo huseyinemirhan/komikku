@@ -104,6 +104,23 @@ android {
         getByName("benchmark").res.srcDirs("src/debug/res")
     }
 
+    // KMK -->
+    // On-device AI upscaling engine (ncnn + Vulkan). Only built for arm64-v8a; other ABIs
+    // simply report "upscaling unavailable" at runtime.
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+        }
+    }
+    defaultConfig {
+        externalNativeBuild {
+            cmake {
+                abiFilters("arm64-v8a")
+            }
+        }
+    }
+    // KMK <--
+
     splits {
         abi {
             isEnable = true

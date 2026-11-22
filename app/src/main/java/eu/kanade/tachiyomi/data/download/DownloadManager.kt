@@ -5,6 +5,9 @@ import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.Page
+// KMK -->
+import eu.kanade.tachiyomi.util.upscale.UpscaleManager
+// KMK <--
 import exh.log.xLogE
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -257,6 +260,9 @@ class DownloadManager(
             val (mangaDir, chapterDirs) = provider.findChapterDirs(filteredChapters, manga, source)
             chapterDirs.forEach { it.delete() }
             cache.removeChapters(filteredChapters, manga)
+            // KMK -->
+            UpscaleManager.deleteChapters(filteredChapters)
+            // KMK <--
 
             // Delete manga directory if empty
             if (mangaDir?.listFiles()?.isEmpty() == true) {
@@ -279,6 +285,9 @@ class DownloadManager(
             }
             provider.findMangaDir(/* SY --> */ manga.ogTitle /* SY <-- */, source)?.delete()
             cache.removeManga(manga)
+            // KMK -->
+            UpscaleManager.deleteManga(manga)
+            // KMK <--
 
             // KMK -->
             if (source.isLocal()) return@launchIO

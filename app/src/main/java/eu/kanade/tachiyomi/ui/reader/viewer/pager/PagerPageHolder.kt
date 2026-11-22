@@ -14,6 +14,9 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
+// KMK -->
+import eu.kanade.tachiyomi.util.upscale.UpscaleManager
+// KMK <--
 import eu.kanade.tachiyomi.widget.ViewPagerAdapter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -76,11 +79,27 @@ class PagerPageHolder(
      */
     private var extraLoadJob: Job? = null
 
+    // KMK -->
+    /**
+     * Re-renders the page when an upscaled version of it has just been produced.
+     */
+    private var upscaleJob: Job? = null
+    // KMK <--
+
     init {
         loadJob = scope.launch { loadPageAndProcessStatus(1) }
         // SY -->
         extraLoadJob = scope.launch { loadPageAndProcessStatus(2) }
         // SY <--
+        // KMK -->
+        upscaleJob = scope.launch {
+            UpscaleManager.completed.collect { key ->
+                val shown = key == UpscaleManager.keyOf(page) ||
+                    extraPage?.let { key == UpscaleManager.keyOf(it) } == true
+                if (shown && page.status == Page.State.Ready) setImage()
+            }
+        }
+        // KMK <--
     }
 
     /**
@@ -92,6 +111,10 @@ class PagerPageHolder(
         loadJob = null
         extraLoadJob?.cancel()
         extraLoadJob = null
+        // KMK -->
+        upscaleJob?.cancel()
+        upscaleJob = null
+        // KMK <--
     }
 
     private fun initProgressIndicator() {
@@ -177,8 +200,17 @@ class PagerPageHolder(
             progressIndicator?.setProgress(95)
         }
 
-        val streamFn = page.stream ?: return
-        val streamFn2 = extraPage?.stream
+        // KMK -->
+        // Queue AI upscaling for this page and the next ones; show the upscaled file if it exists already.
+        val (upscaledOrOriginal, upscaledOrOriginal2) = withIOContext {
+            UpscaleManager.onPageReady(page)
+            extraPage?.let { UpscaleManager.onPageReady(it) }
+            (UpscaleManager.cachedStream(page) ?: page.stream) to
+                extraPage?.let { UpscaleManager.cachedStream(it) ?: it.stream }
+        }
+        val streamFn = upscaledOrOriginal ?: return
+        val streamFn2 = upscaledOrOriginal2
+        // KMK <--
 
         try {
             val (source, isAnimated, background) = withIOContext {

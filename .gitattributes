@@ -4,6 +4,9 @@
 # Windows forced line-endings
 /.idea/* text eol=crlf
 
+# KMK: AI upscaling models are binary blobs, never normalise line endings
+app/src/main/assets/upscale-models/* binary
+
 # Gradle wrapper
 *.jar binary
 

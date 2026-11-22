@@ -51,6 +51,9 @@ import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.DiskUtil.MAX_FILE_NAME_BYTES
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
+// KMK -->
+import eu.kanade.tachiyomi.util.upscale.UpscaleManager
+// KMK <--
 import exh.metadata.metadata.RaisedSearchMetadata
 import exh.source.MERGED_SOURCE_ID
 import exh.source.getMainSource
@@ -387,6 +390,9 @@ class ReaderViewModel @JvmOverloads constructor(
     }
 
     override fun onCleared() {
+        // KMK -->
+        UpscaleManager.onReaderClosed()
+        // KMK <--
         val currentChapters = state.value.viewerChapters
         if (currentChapters != null) {
             currentChapters.unref()
@@ -682,6 +688,10 @@ class ReaderViewModel @JvmOverloads constructor(
         // SY -->
         mutableState.update { it.copy(currentPageText = currentPageText) }
         // SY <--
+
+        // KMK -->
+        UpscaleManager.setFocus(page)
+        // KMK <--
 
         val selectedChapter = page.chapter
         val pages = selectedChapter.pages ?: return

@@ -242,4 +242,17 @@
     <string name="pref_discord_show_download_button_summary">Displays a button to download the app</string>
     <string name="pref_discord_show_discord_button">Show Discord Button</string>
     <string name="pref_discord_show_discord_button_summary">Displays a button to join the Discord server</string>
+
+    <!-- AI upscaling -->
+    <string name="pref_category_upscale">AI upscaling</string>
+    <string name="pref_upscale_enabled">Upscale pages (AI, 2×)</string>
+    <string name="pref_upscale_enabled_summary">Enlarges pages with Real-CUGAN on your phone\'s GPU. Pages open normally and switch to the upscaled version when it is ready.</string>
+    <string name="pref_upscale_unsupported_summary">Not available on this device: needs a 64-bit ARM phone with Vulkan.</string>
+    <string name="pref_upscale_model">Model</string>
+    <string name="upscale_model_conservative">Conservative (keeps the original look)</string>
+    <string name="upscale_model_denoise">Denoise (cleans JPEG artifacts)</string>
+    <string name="pref_upscale_cache_size">Upscaled page cache</string>
+    <string name="pref_upscale_cache_size_summary">Pages upscaled while reading are kept up to this size, oldest removed first. Upscaled downloads are not affected.</string>
+    <string name="pref_upscale_on_download">Upscale chapters when downloaded</string>
+    <string name="pref_upscale_on_download_summary">Saves upscaled pages together with each download so they are ready offline. Uses extra storage and is deleted with the chapter.</string>
 </resources>

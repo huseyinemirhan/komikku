@@ -1,0 +1,47 @@
+name: Build APK (upscaling, debug)
+
+# KMK: manual / branch build of a debug APK (signed with the debug key, installs next to the
+# normal app as "app.komikku.dev"). Needs no secrets.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/image-upscaling
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build debug APK
+    runs-on: 'ubuntu-24.04'
+
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
+
+      # The native upscaling library needs the Android NDK; AGP downloads the version it wants
+      # automatically as long as the SDK licenses are accepted. CMake downloads ncnn on its own.
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: komikku-upscale-debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

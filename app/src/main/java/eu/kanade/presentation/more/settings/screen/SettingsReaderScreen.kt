@@ -14,6 +14,9 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences.WebtoonScaleType
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagerConfig
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
+// KMK -->
+import eu.kanade.tachiyomi.util.upscale.NativeUpscaler
+// KMK <--
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableMap
@@ -110,6 +113,9 @@ object SettingsReaderScreen : SearchableSettings {
             // SY <--
             getNavigationGroup(readerPreferences = readerPref),
             getActionsGroup(readerPreferences = readerPref),
+            // KMK -->
+            getUpscaleGroup(readerPreferences = readerPref),
+            // KMK <--
             // SY -->
             getPageDownloadingGroup(readerPreferences = readerPref),
             getForkSettingsGroup(readerPreferences = readerPref),
@@ -551,6 +557,59 @@ object SettingsReaderScreen : SearchableSettings {
             ),
         )
     }
+
+    // KMK -->
+    @Composable
+    private fun getUpscaleGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+        val supported = remember { NativeUpscaler.isSupported }
+        val enabled by readerPreferences.upscaleEnabled().collectAsState()
+        return Preference.PreferenceGroup(
+            title = stringResource(KMR.strings.pref_category_upscale),
+            enabled = supported,
+            preferenceItems = persistentListOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = readerPreferences.upscaleEnabled(),
+                    title = stringResource(KMR.strings.pref_upscale_enabled),
+                    subtitle = stringResource(
+                        if (supported) {
+                            KMR.strings.pref_upscale_enabled_summary
+                        } else {
+                            KMR.strings.pref_upscale_unsupported_summary
+                        },
+                    ),
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = readerPreferences.upscaleModel(),
+                    entries = persistentMapOf(
+                        "up2x-conservative" to stringResource(KMR.strings.upscale_model_conservative),
+                        "up2x-denoise2x" to stringResource(KMR.strings.upscale_model_denoise),
+                    ),
+                    title = stringResource(KMR.strings.pref_upscale_model),
+                    enabled = enabled,
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = readerPreferences.upscaleCacheSizeMb(),
+                    entries = persistentMapOf(
+                        500 to "500 MB",
+                        1000 to "1 GB",
+                        2000 to "2 GB",
+                        4000 to "4 GB",
+                        8000 to "8 GB",
+                    ),
+                    title = stringResource(KMR.strings.pref_upscale_cache_size),
+                    subtitle = stringResource(KMR.strings.pref_upscale_cache_size_summary),
+                    enabled = enabled,
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = readerPreferences.upscaleOnDownload(),
+                    title = stringResource(KMR.strings.pref_upscale_on_download),
+                    subtitle = stringResource(KMR.strings.pref_upscale_on_download_summary),
+                    enabled = enabled,
+                ),
+            ),
+        )
+    }
+    // KMK <--
 
     // SY -->
     @Composable

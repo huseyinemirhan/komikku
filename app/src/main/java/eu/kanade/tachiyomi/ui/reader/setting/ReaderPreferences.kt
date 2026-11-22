@@ -104,6 +104,20 @@ class ReaderPreferences(
     fun pagedDisableZoomIn() = preferenceStore.getBoolean("paged_disable_zoom_in", false)
     // KMK <--
 
+    // KMK -->
+    // AI upscaling (Real-CUGAN 2x on the GPU)
+    fun upscaleEnabled() = preferenceStore.getBoolean("pref_upscale_enabled", false)
+
+    /** Model file name without extension, in assets/upscale-models. */
+    fun upscaleModel() = preferenceStore.getString("pref_upscale_model", "up2x-conservative")
+
+    /** Size limit of the cache of pages upscaled while reading, in MB. */
+    fun upscaleCacheSizeMb() = preferenceStore.getInt("pref_upscale_cache_size_mb", 2000)
+
+    /** Also upscale chapters when they finish downloading, and keep the result with the download. */
+    fun upscaleOnDownload() = preferenceStore.getBoolean("pref_upscale_on_download", false)
+    // KMK <--
+
     // endregion
 
     // region Split two page spread

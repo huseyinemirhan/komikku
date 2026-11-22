@@ -15,6 +15,9 @@ import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.DiskUtil.NOMEDIA_FILE
 import eu.kanade.tachiyomi.util.storage.saveTo
+// KMK -->
+import eu.kanade.tachiyomi.util.upscale.UpscaleManager
+// KMK <--
 import exh.source.MERGED_SOURCE_ID
 import exh.source.isEhBasedSource
 import exh.util.DataSaver
@@ -448,6 +451,11 @@ class Downloader(
             DiskUtil.createNoMediaFile(tmpDir, context)
 
             download.status = Download.State.DOWNLOADED
+
+            // KMK -->
+            // Optionally upscale the finished chapter in the background (no-op unless enabled in settings).
+            UpscaleManager.enqueueDownloadedChapter(download.manga, download.chapter, download.source)
+            // KMK <--
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
             // If the page list threw, it will resume here
